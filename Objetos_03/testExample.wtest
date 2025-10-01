@@ -1,0 +1,41 @@
+import example.frank
+import example.logan
+import example.malaria800
+import example.malaria500
+import example.lupus
+
+describe "Dr Casa - Temporada 1" {
+
+  test "Frank contrae una malaria de 800 celulas" {
+    frank.contraer(malaria800)
+    assert.equals(frank.temperatura(), 36)
+    frank.vivirUnDia()
+    assert.equals(frank.temperatura(), 36.8)    
+  }
+
+  test "La malaria se reproduce" {
+    malaria500.reproducite()
+    assert.equals(malaria500.celulasAmenazadas(), 1000)
+  }
+
+  test "Logan vive un día" {
+    logan.vivirUnDia()
+    assert.equals(logan.cantidadDeCelulasAmenazadasPorEnfermedadesAgresivas(), 0)
+    assert.equals(logan.enfermedadQueMasCelulasAfecta(), lupus)
+    assert.equals(logan.celulas(), 2990000)
+    assert.notThat(logan.estaEnComa())
+    assert.equals(logan.temperatura(), 36.6)
+  }
+
+  test "Logan vive 31 días" {
+    31.times { _ => 
+      logan.vivirUnDia()
+    }
+
+    assert.equals(logan.temperatura(), 45)
+    assert.that(logan.estaEnComa())
+    assert.equals(logan.cantidadDeCelulasAmenazadasPorEnfermedadesAgresivas(), 10000)
+    assert.equals(logan.celulas(), 2690000)
+    // assert.equals(logan.enfermedadQueMasCelulasAfecta(), lupus)
+  }
+}
