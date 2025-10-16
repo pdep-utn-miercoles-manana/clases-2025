@@ -1,0 +1,141 @@
+import src.exceptions.*
+import src.persona.*
+import src.enfermedad.*
+import src.medico.*
+import src.jefeDeDepartamento.*
+import src.grupo.*
+
+describe "Dr Casa - Temporada 1" {
+
+	const malaria500 = new EnfermedadInfecciosa(celulasAmenazadas = 500)
+	const malaria800 = new EnfermedadInfecciosa(celulasAmenazadas = 800)
+	const otitis100 = new EnfermedadInfecciosa(celulasAmenazadas = 100)
+	
+	// Logan, con temperatura normal (36 grados) y con 3.000.000 de células, habiendo contraído las tres enfermedades del ítem a).
+	const logan = new Persona(enfermedades = #{malaria500, otitis100, lupus, lupus}, celulas = 3000000)
+	// Frank, coperatura normal y 3.500.000 células.n tem
+	const frank = new Persona(enfermedades = #{}, celulas = 3500000)
+
+
+
+  test "Frank contrae una malaria de 800 celulas" {
+    frank.contraer(malaria800)
+    assert.equals(frank.temperatura(), 36)
+    frank.vivirUnDia()
+    assert.equals(frank.temperatura(), 36.8)    
+  }
+
+  test "La malaria se reproduce" {
+    malaria500.reproducite()
+    assert.equals(malaria500.celulasAmenazadas(), 1000)
+  }
+
+  test "Logan vive un día" {
+    logan.vivirUnDia()
+    assert.equals(logan.cantidadDeCelulasAmenazadasPorEnfermedadesAgresivas(), 0)
+    assert.equals(logan.enfermedadQueMasCelulasAfecta(), lupus)
+    assert.equals(logan.celulas(), 2990000)
+    assert.notThat(logan.estaEnComa())
+    assert.equals(logan.temperatura(), 36.6)
+  }
+
+  test "Logan vive 31 días" {
+    31.times { _ => 
+      logan.vivirUnDia()
+    }
+
+    assert.equals(logan.temperatura(), 45)
+    assert.that(logan.estaEnComa())
+    assert.equals(logan.cantidadDeCelulasAmenazadasPorEnfermedadesAgresivas(), 10000)
+    assert.equals(logan.celulas(), 2690000)
+    // assert.equals(logan.enfermedadQueMasCelulasAfecta(), lupus)
+  }
+}
+
+describe "Dr Casa - Temporada 2" {
+
+	const malaria500 = new EnfermedadInfecciosa(celulasAmenazadas = 500)
+	const malaria800 = new EnfermedadInfecciosa(celulasAmenazadas = 800)
+	const otitis100 = new EnfermedadInfecciosa(celulasAmenazadas = 100)
+	const lupus10000 = new EnfermedadAutoinmune(celulasAmenazadas = 10000)
+	
+	// Logan, con temperatura normal (36 grados) y con 3.000.000 de células, habiendo contraído las tres enfermedades del ítem a).
+	const logan = new Persona(enfermedades = #{malaria500, otitis100, lupus10000, lupus10000}, celulas = 3000000)
+	// Frank, coperatura normal y 3.500.000 células.n tem
+	const frank = new Persona(enfermedades = #{}, celulas = 3500000)
+
+	const cameron = new Medico(dosis = 10)
+
+	const house = new JefeDeDepartamento(subordinados = #{cameron}, dosis = 10)
+
+
+	test "La malaria de 500 se atenúa en 100 células y queda con 400." {
+
+		malaria500.atenuarse(100)
+		assert.equals(400, malaria500.celulasAmenazadas())
+
+	}	
+
+	test "La lupus de 10000 se atenúa en 500 células y queda con 9500." {
+
+		lupus10000.atenuarse(500)
+		assert.equals(9500, lupus10000.celulasAmenazadas())
+
+	}	
+
+	test "Cameron atiende a Logan." {
+
+		cameron.atenderA(logan)
+
+		assert.equals(350, malaria500.celulasAmenazadas())
+		assert.equals(9850, lupus10000.celulasAmenazadas())
+		assert.equals(2, logan.cantidadEnfermedades())
+
+	}
+
+	test "House atiende a Cameron." {
+
+		cameron.contraer(malaria500)
+
+		house.atenderA(cameron)
+
+		assert.equals(350, malaria500.celulasAmenazadas())
+
+	}
+
+	test "Cameron contrae la malaria" {
+		cameron.contraer(malaria500)
+		assert.that(true)
+	}
+
+	test "House contrae la malaria" {
+		house.contraer(malaria500)
+		assert.that(true)
+	}
+}
+
+describe "Dr Casa - Temporada 3" {
+	const cameron = new Medico(
+		dosis = 10,
+		celulas = 4000,
+		factor = true,
+		grupo = grupoA
+	)
+
+	const house = new JefeDeDepartamento(
+		subordinados = #{cameron},
+		dosis = 10,
+		factor = true,
+		grupo = grupo0
+	)
+
+	test "Cameron le intenta donar a House y no puede" {
+		assert.notThat(cameron.puedeHacerTransfusion(house, 1100))
+		cameron.donarSangre(house, 1100)
+		// IMPORTANTÍSIMO que el assert sea de un bloque, porque si hacemos cameron.donarSangre(house, 1100) hace
+		// que ejecute el código y rompe, el uso del bloque difiere la ejecución a disposición del runner de tests
+		assert.throwsExceptionWithMessage("pará loco, no puede donar!!", {
+			cameron.donarSangre(house, 1100)
+		})
+	}
+}
